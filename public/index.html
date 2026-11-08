@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0A0E14" />
+  <link rel="manifest" href="/manifest.json" />
+  <title>NCI Behavioral Ops & 6MX Field Trainer</title>
+  <style>
+    :root {
+      --bg: #0A0E14;
+      --surface: #121822;
+      --card: #18202C;
+      --border: #263244;
+      --cyan: #00E5FF;
+      --amber: #FFB300;
+      --crimson: #FF5252;
+      --emerald: #00E676;
+      --purple: #B388FF;
+      --text: #ECEFF4;
+      --muted: #94A3B8;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding-bottom: 84px;
+      user-select: none;
+    }
+    .container { max-width: 540px; margin: 0 auto; padding: 16px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .card-surface { background: var(--surface); }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.8px;
+    }
+    .eyebrow {
+      color: var(--cyan);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.3px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    h1, h2, h3, p { margin: 0; }
+    .title-lg { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+    .muted { color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .row { display: flex; gap: 8px; align-items: center; }
+    .between { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    button {
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 700;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 12px;
+      transition: transform 0.08s ease, background 0.15s ease;
+    }
+    button:active { transform: scale(0.97); }
+    .btn-cyan { background: var(--cyan); color: #051318; border-color: var(--cyan); font-weight: 800; }
+    .btn-amber { background: var(--amber); color: #1F1400; border-color: var(--amber); font-weight: 800; }
+    .btn-emerald { background: var(--emerald); color: #041F10; border-color: var(--emerald); font-weight: 800; }
+    .btn-crimson { background: var(--crimson); color: #240404; border-color: var(--crimson); font-weight: 800; }
+    .btn-outline-cyan { border-color: var(--cyan); color: var(--cyan); background: rgba(0,229,255,0.1); }
+    .btn-outline-amber { border-color: var(--amber); color: var(--amber); background: rgba(255,179,0,0.1); }
+    input, textarea, select {
+      width: 100%;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 13px;
+      margin-top: 6px;
+      margin-bottom: 10px;
+    }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 6px 12px;
+      z-index: 100;
+    }
+    .nav-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      padding: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .nav-btn.active { color: var(--cyan); }
+    .nav-code { font-size: 10px; font-weight: 800; }
+    .nav-label { font-size: 11px; }
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      background: var(--bg);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 5px;
+    }
+    .progress-fill { height: 100%; border-radius: 4px; transition: width 0.25s ease; }
+    .stealth-quadrant {
+      height: 190px;
+      border-radius: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      text-align: center;
+      background: var(--surface);
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="container"></div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="switchTab('COMMAND')" id="nav-COMMAND">
+      <span class="nav-code">[CMD]</span><span class="nav-label">Command</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('FIELD_OPS')" id="nav-FIELD_OPS">
+      <span class="nav-code">[OPS]</span><span class="nav-label">Field Ops</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('BTE_LAB')" id="nav-BTE_LAB">
+      <span class="nav-code">[BTE]</span><span class="nav-label">BTE Lab</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('TOOLKIT')" id="nav-TOOLKIT">
+      <span class="nav-code">[6MX]</span><span class="nav-label">Cue Cards</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('ACADEMY')" id="nav-ACADEMY">
+      <span class="nav-code">[NCI]</span><span class="nav-label">Academy</span>
+    </button>
+  </nav>
+
+  <script>
+    // ========================================================
+    // COMPLETE DATASET (Synced with Kotlin Compose Multiplatform)
+    // ========================================================
+    const BTE_ELEMENTS = [
+      { id: "bte_br", symbol: "Br", num: 1, name: "Blink Rate Spike", zone: "Eyes & Ocular", pts: 3, comfort: false, baseline: "12–18 blinks/min.", meaning: "Rapid fluttering (3+ blinks in 2s) after stimulus signals striatal dopamine/stress shift.", clusters: "Lp, Vd, Sw", source: "Behavior Ops Manual" },
+      { id: "bte_ec", symbol: "Ec", num: 2, name: "Extended Eye Closure", zone: "Eyes & Ocular", pts: 4, comfort: false, baseline: "100–150ms blink.", meaning: "Eyelids closed >400ms to subconsciously block out threat or probe.", clusters: "Br, Fc, Sh", source: "Behavior Ops Manual" },
+      { id: "bte_ef", symbol: "Ef", num: 3, name: "Eyebrow Flash + Head Tilt", zone: "Eyes & Ocular", pts: 0, comfort: true, baseline: "Neutral resting brow.", meaning: "Bilateral brow raise + carotid exposure via head tilt signals mammalian safety & warmth.", clusters: "Vf, Op", source: "Ellipsis Manual / Trust Code" },
+      { id: "bte_lp", symbol: "Lp", num: 4, name: "Lip Compression", zone: "Mouth & Lips", pts: 4, comfort: false, baseline: "Visible relaxed lips.", meaning: "Rolling lips inward until red border disappears—brain sealing information inside.", clusters: "Br, Vd, Jl", source: "Behavior Ops Manual" },
+      { id: "bte_ll", symbol: "Ll", num: 5, name: "Lip Licking / Bite", zone: "Mouth & Lips", pts: 3, comfort: false, baseline: "Normal salivary moisture.", meaning: "Dry-mouth tongue sweep or lip bite immediately after a probe.", clusters: "Sw, Br, Vc", source: "Behavior Ops Manual" },
+      { id: "bte_fc", symbol: "Fc", num: 6, name: "Neck / Nose Pacifier Touch", zone: "Head & Face", pts: 3, comfort: false, baseline: "Hands resting naturally.", meaning: "Touching suprasternal notch (neck dimple) or nose to stimulate vagus nerve and slow heart rate.", clusters: "Ec, Lp, Vd", source: "Behavior Ops Manual" },
+      { id: "bte_jl", symbol: "Jl", num: 7, name: "Masseter Jaw Clench", zone: "Head & Face", pts: 3, comfort: false, baseline: "Relaxed jawline.", meaning: "Lateral jaw shift or masseter flex indicating suppressed aggression or resistance.", clusters: "Lp, Fd, St", source: "Ellipsis Manual" },
+      { id: "bte_ci", symbol: "Ci", num: 8, name: "Contradictory Head Shake", zone: "Head & Face", pts: 5, comfort: false, baseline: "Congruent head motion.", meaning: "Micro-shake 'No' while verbally stating 'Yes, definitely'—motor cortex leaks truth.", clusters: "Sh, Eq, Lp", source: "Behavior Ops Manual / NCI 3" },
+      { id: "bte_vd", symbol: "Vd", num: 9, name: "Ventral Denial / Barrier", zone: "Torso & Posture", pts: 4, comfort: false, baseline: "Navel/sternum toward speaker.", meaning: "Blading torso away, crossing arms tightly, or placing coffee/laptop barrier across chest.", clusters: "Ft, Lp, Lr", source: "Six-Minute X-Ray" },
+      { id: "bte_vf", symbol: "Vf", num: 10, name: "Ventral Fronting", zone: "Torso & Posture", pts: 0, comfort: true, baseline: "Neutral alignment.", meaning: "Forward torso lean with exposed sternum toward speaker—high trust & engagement.", clusters: "Ef, Op", source: "Trust Code / 6MX" },
+      { id: "bte_sh", symbol: "Sh", num: 11, name: "Unilateral Shoulder Shrug", zone: "Torso & Posture", pts: 5, comfort: false, baseline: "Symmetrical shoulders.", meaning: "One-sided micro-shrug during a definitive statement leaks zero confidence in spoken words.", clusters: "Ci, Eq, Vc", source: "Behavior Ops Manual / NCI 2" },
+      { id: "bte_lr", symbol: "Lr", num: 12, name: "Distancing Lean / Turtle", zone: "Torso & Posture", pts: 3, comfort: false, baseline: "Relaxed neck exposure.", meaning: "Shoulders rising to hide neck or leaning backward as sensitive topic arises.", clusters: "Vd, Fc, Lp", source: "Behavior Ops Manual" },
+      { id: "bte_gm", symbol: "Gm", num: 13, name: "Grooming / Lint-Picking", zone: "Hands & Fingers", pts: 3, comfort: false, baseline: "Normal hand gestures.", meaning: "Picking at imaginary lint with downward gaze—displacement and withdrawal.", clusters: "Vd, Ec, Lp", source: "Behavior Ops Manual" },
+      { id: "bte_fd", symbol: "Fd", num: 14, name: "Sudden Gesture Freeze", zone: "Hands & Fingers", pts: 4, comfort: false, baseline: "Rhythmic hand illustrators.", meaning: "Hands suddenly lock/freeze due to prefrontal cognitive overload starving motor cortex.", clusters: "St, Ci, Eq", source: "Behavior Ops Manual / NCI 3" },
+      { id: "bte_op", symbol: "Op", num: 15, name: "Open Palms / Steepling", zone: "Hands & Fingers", pts: 0, comfort: true, baseline: "Neutral hands.", meaning: "Upward palms signal candor; fingertip steepling signals high confidence.", clusters: "Vf, Ef", source: "Six-Minute X-Ray" },
+      { id: "bte_ft", symbol: "Ft", num: 16, name: "Lead Foot Exit Pivot", zone: "Legs & Feet", pts: 3, comfort: false, baseline: "Feet angled toward partner.", meaning: "Foot pivots toward nearest exit while face maintains polite social smile.", clusters: "Vd, Lr, Gm", source: "Six-Minute X-Ray / NCI 1" },
+      { id: "bte_al", symbol: "Al", num: 17, name: "Sudden Ankle Lock", zone: "Legs & Feet", pts: 4, comfort: false, baseline: "Feet flat or relaxed.", meaning: "Feet whip back under chair and lock around chair legs/ankles after probe.", clusters: "Fd, Lp, Br", source: "Behavior Ops Manual" },
+      { id: "bte_vc", symbol: "Vc", num: 18, name: "Vocal Pitch Spike / Clear", zone: "Vocal & Linguistic", pts: 4, comfort: false, baseline: "Resonant chest voice.", meaning: "Laryngeal tension raises vocal pitch or triggers non-illness throat clear.", clusters: "Sw, Ll, Eq", source: "Behavior Ops Manual / NCI 2" },
+      { id: "bte_eq", symbol: "Eq", num: 19, name: "Equivocation & Pronoun Drop", zone: "Vocal & Linguistic", pts: 5, comfort: false, baseline: "Direct 'I' ownership.", meaning: "Dropping 'I', shifting to passive voice, or hedging ('To be honest, basically...').", clusters: "Sh, Ci, Vc", source: "NCI Level 2 / 6MX" },
+      { id: "bte_nq", symbol: "Nq", num: 20, name: "Repeating Question Stall", zone: "Vocal & Linguistic", pts: 4, comfort: false, baseline: "<1.2s natural latency.", meaning: "Repeating your exact question back to buy prefrontal fabrication time.", clusters: "Ec, Eq, Fd", source: "Behavior Ops Manual / NCI 3" },
+      { id: "bte_sw", symbol: "Sw", num: 21, name: "Hard Autonomic Swallow", zone: "Autonomic", pts: 4, comfort: false, baseline: "Unnoticeable swallowing.", meaning: "Visible Adam's apple jump / hard swallow from cricopharyngeal stress constriction.", clusters: "Vc, Ll, Br", source: "Behavior Ops Manual" },
+      { id: "bte_st", symbol: "St", num: 22, name: "Shallow Breathing / Apnea", zone: "Autonomic", pts: 3, comfort: false, baseline: "Diaphragmatic breathing.", meaning: "Holding breath during probe followed by long recovery exhale.", clusters: "Fd, Al, Jl", source: "Behavior Ops Manual" }
+    ];
+
+    const FIELD_MISSIONS = [
+      {
+        id: "op_t1_01", tier: 1, tierName: "Tier 1: Zero-Contact Recon", code: "OP-SILENT-COMPASS",
+        title: "Lead-Foot & Ventral Recon (Outside of Conversation)", source: "Six-Minute X-Ray / NCI Level 1", duration: "10 Mins (Public Space)", xp: 100,
+        objective: "Observe 5 pairs of people talking from a distance without speaking to anyone. Identify who wants to stay vs. who is preparing to leave based on navel (Ventral Fronting) and lead-foot orientation.",
+        briefing: [
+          "Find a seat in a cafe or public area where you can see full-body postures including feet.",
+          "Remember: The face lies first (social smile); the feet tell the truth (reptilian exit preparation).",
+          "Use the No-Look Haptic Stealth Tally to tap cues by thumb feel without staring at your screen."
+        ],
+        quadrants: ["Ventral Fronting", "Ventral Denial / Barrier", "Lead Foot Exit Pivot", "Congruent Openness"],
+        prompt: "Did you spot anyone smiling with their upper body while their feet were already pointed toward the exit?"
+      },
+      {
+        id: "op_t1_02", tier: 1, tierName: "Tier 1: Zero-Contact Recon", code: "OP-BLINK-BASELINE",
+        title: "Checkout Counter Baseline Shift", source: "The Behavior Operations Manual", duration: "8 Mins (Queue / Line)", xp: 120,
+        objective: "While waiting in line, lock a 20-second resting baseline on a customer or cashier, then spot the exact BTE deviation within 7 seconds of payment.",
+        briefing: [
+          "Observe resting blink rate and hand position for 20s before the register interaction peaks.",
+          "Watch the 7-second window right when the price is announced.",
+          "Spot Lip Compression (Lp), Neck Touch (Fc), or Blink Spike (Br)."
+        ],
+        quadrants: ["Baseline Locked", "Blink / Eye Shift", "Lip Compression (Lp)", "Neck/Face Pacifier (Fc)"],
+        prompt: "Which channel leaked stress fastest at the counter—eyes, mouth, or hands?"
+      },
+      {
+        id: "op_t2_01", tier: 2, tierName: "Tier 2: Nonverbal Calibration", code: "OP-MAMMALIAN-FLASH",
+        title: "The Mammalian Warmth Trigger", source: "The Ellipsis Manual / Trust Code", duration: "10 Mins (Passersby)", xp: 150,
+        objective: "Test the evolutionary 'Non-Threat Friend' signal on 5 passersby: a subtle Eyebrow Flash (<0.3s) + 10-degree Head Tilt (exposing carotid) + warm eyes.",
+        briefing: [
+          "At ~8 feet distance, make brief eye contact and fire a micro eyebrow flash + slight head tilt.",
+          "Observe how often their reptilian defense drops and they involuntarily mirror the flash or smile."
+        ],
+        quadrants: ["Mirrored Brow/Smile", "Verbal Greeting", "Neutral / No Shift", "Looked Away"],
+        prompt: "How did adding the slight head tilt change people's warmth response?"
+      },
+      {
+        id: "op_t2_02", tier: 2, tierName: "Tier 2: Nonverbal Calibration", code: "OP-SLOW-GRAVITY",
+        title: "20% Movement Deceleration & Vocal Drop", source: "The Ellipsis Manual (Authority Pyramid)", duration: "15 Mins", xp: 160,
+        objective: "Slow your hand and head movements by 20%, eliminate nervous head-bobbing, and end every sentence on a downward vocal pitch.",
+        briefing: [
+          "Pause 0.5 seconds before turning your head when someone speaks.",
+          "Drop the final word of every sentence down in pitch (statement inflection, never upward question inflection)."
+        ],
+        quadrants: ["Downward Pitch Rep", "20% Slower Turn", "Stillness Held", "Caught Rushing"],
+        prompt: "How did slowing your physical movement by 20% change how others deferred to your space?"
+      },
+      {
+        id: "op_t3_01", tier: 3, tierName: "Tier 3: Micro-Rapport (15-60s)", code: "OP-TIME-CONSTRAINT",
+        title: "Artificial Time Constraint Opener", source: "Six-Minute X-Ray / Ellipsis Manual", duration: "30–60 Seconds", xp: 200,
+        objective: "Initiate a brief micro-interaction with a stranger using an upfront Artificial Time Constraint ('I have to run in 20 seconds, but...') so their defensive shield drops immediately.",
+        briefing: [
+          "Strangers put up walls when they don't know how long you will corner them.",
+          "Open with a 20-second time constraint + slight exit foot angle, deliver warmth, and exit first on a high note."
+        ],
+        quadrants: ["Time Constraint Used", "Defense Wall Dropped", "Subject Extended Chat", "High-Note Exit"],
+        prompt: "Did you see their shoulders or posture relax the moment you said you only had 20 seconds?"
+      },
+      {
+        id: "op_t4_01", tier: 4, tierName: "Tier 4: 6MX & Elicitation", code: "OP-NO-QUESTION-PROBE",
+        title: "Elicitation Without Questions", source: "Six-Minute X-Ray / NCI Level 2", duration: "3–5 Minutes", xp: 280,
+        objective: "Discover 3 pieces of meaningful information in a conversation WITHOUT asking a single direct question—using only Assumptive Statements, Mild Disbelief, or Third-Party Quotes.",
+        briefing: [
+          "Questions trigger interrogation defense; statements trigger the urge to correct or elaborate.",
+          "Use: 'It seems like your industry has gotten way more chaotic lately...' or 'There's no way a team of that size pulled that off in a month.'"
+        ],
+        quadrants: ["Assumptive Statement", "Disbelief/Flattery Trap", "Subject Elaborated", "Accidental Question"],
+        prompt: "How much more candid were their responses to statements compared to standard questions?"
+      },
+      {
+        id: "op_t5_01", tier: 5, tierName: "Tier 5: Advanced Ellipsis Ops", code: "OP-LINGUISTIC-HARVEST",
+        title: "Linguistic Harvesting & Compliance Ladder", source: "The Ellipsis Manual / NCI 3 & 4", duration: "5–10 Minutes", xp: 400,
+        objective: "Harvest 3 exact emotional adjectives/nouns the subject uses, echo them back verbatim 2 minutes later, and execute a 3-step Compliance Ladder.",
+        briefing: [
+          "Listen for distinctive predicate words ('bulletproof', 'nightmare', 'frictionless').",
+          "Echo those exact words back while gesturing to a consistent spatial anchor zone."
+        ],
+        quadrants: ["Word Harvested", "Harvested Word Echoed", "Compliance Step 1/2", "Target Agreement"],
+        prompt: "What were the exact 3 words you harvested and how did they react when you echoed them?"
+      }
+    ];
+
+    const POCKET_CUE_CARDS = [
+      {
+        id: "sig", cat: "6MX Social Need", title: "Significance (SIG)", badge: "NEED #1: SIGNIFICANCE",
+        summary: "Driven to be seen as unique, elite, respected, and irreplaceable. They want to stand above the crowd, not blend in.",
+        tells: ["Bespoke/high-status watches, gear, or titles.", "Steers conversation to personal achievements and high-level access.", "Expansive posture; bristles if compared to 'average people'."],
+        phrases: [
+          "\"Honestly, 99% of people in your field don't operate at that standard.\"",
+          "\"Given your specific track record with [X], I wanted your perspective on this.\"",
+          "\"This isn't our standard approach—it requires someone who sees the high-level picture.\""
+        ],
+        avoid: ["NEVER say 'Oh yeah, lots of our clients do that too!' (destroys uniqueness).", "NEVER interrupt an achievement story or correct a minor detail publicly."]
+      },
+      {
+        id: "app", cat: "6MX Social Need", title: "Approval (APP)", badge: "NEED #2: APPROVAL",
+        summary: "Driven by overt warmth, praise, and reassurance. Scans faces constantly to verify you like and appreciate them.",
+        tells: ["Frequent nodding, smiling, and pre-apologizing ('Sorry to bother you!').", "Checks your facial expression immediately after speaking."],
+        phrases: [
+          "\"I really appreciate how thoughtful you were with how you handled that.\"",
+          "\"You made that whole process so much smoother for everyone involved.\""
+        ],
+        avoid: ["NEVER respond with cold, deadpan silence (they read neutral silence as rejection)."]
+      },
+      {
+        id: "acc", cat: "6MX Social Need", title: "Acceptance (ACC)", badge: "NEED #3: ACCEPTANCE",
+        summary: "Driven by safe tribal belonging. Wants to be included in 'Us/We' without being singled out under a harsh spotlight.",
+        tells: ["Wears tribal/team-conforming attire.", "Uses 'We/Us' language; checks group consensus before speaking."],
+        phrases: [
+          "\"We're in this together—that's just how people like us handle things.\"",
+          "\"Everyone on the team immediately felt like you were a natural fit here.\""
+        ],
+        avoid: ["NEVER put them on the spot alone in front of a crowd without warning."]
+      },
+      {
+        id: "int", cat: "6MX Social Need", title: "Intelligence (INT)", badge: "NEED #4: INTELLIGENCE",
+        summary: "Driven to be recognized as the sharpest, most analytical mind in the room.",
+        tells: ["Precise vocabulary; corrects subtle inaccuracies ('Well, technically...').", "Finger-to-chin evaluation gesture or steepling."],
+        phrases: [
+          "\"How did you spot that second-order bottleneck so fast? Most people miss that.\"",
+          "\"Poke holes in this for me—where do you see the logical flaw here?\""
+        ],
+        avoid: ["NEVER use fluffy hype without data or over-explain basic concepts."]
+      },
+      {
+        id: "pit", cat: "6MX Social Need", title: "Pity (PIT)", badge: "NEED #5: PITY",
+        summary: "Driven to have their unseen burdens, exhaustion, and sacrifices witnessed and validated.",
+        tells: ["Answers 'How are you?' with a heavy sigh and list of unfair burdens.", "Slumped 'weight of the world' shoulders."],
+        phrases: [
+          "\"I honestly don't know how you've been carrying all of that on your own.\"",
+          "\"Most people have zero idea how much unseen work you've had to absorb this week.\""
+        ],
+        avoid: ["NEVER minimize their struggle with 'Look on the bright side!' or 'Everyone's busy.'"]
+      },
+      {
+        id: "pow", cat: "6MX Social Need", title: "Power (POW)", badge: "NEED #6: POWER",
+        summary: "Driven by control, autonomy, dominance, and having the final decision.",
+        tells: ["Declarative imperatives; controls physical territory; pushes back if given only 1 option."],
+        phrases: [
+          "\"You're in the driver's seat—here are the two high-leverage options, 100% your call.\"",
+          "\"Bottom line: what outcome do you want locked in by Friday?\""
+        ],
+        avoid: ["NEVER use controlling phrasing ('You have to...') or ramble before the bottom line."]
+      },
+      {
+        id: "fate", cat: "Ellipsis Manual", title: "The FATE Model", badge: "F.A.T.E. LEVERS",
+        summary: "Focus, Authority, Tribe, Emotion—the 4 primal levers that bypass neocortical resistance.",
+        tells: ["Sequence: 1) Capture Focus -> 2) Project 20% slower Authority -> 3) Frame 'We' Tribe -> 4) Trigger Social Need Emotion."],
+        phrases: [
+          "Focus: \"Hold on one second—look at that exact pattern right there.\"",
+          "Authority: \"Here is how we are going to structure the next ten minutes.\"",
+          "Tribe: \"For people wired like us, the standard playbook doesn't work.\""
+        ],
+        avoid: ["NEVER pitch dry logic while Focus is scattered or Authority is undermined by upward pitch."]
+      },
+      {
+        id: "trust", cat: "The Trust Code", title: "Trust Wobble Audit", badge: "TRUST CODE TRIAD",
+        summary: "Trust breaks down when a 'Wobble' appears in Authenticity, Empathy, or Logic.",
+        tells: ["Authenticity Wobble = seeming too polished/fake.", "Empathy Wobble = rushing/checking phone.", "Logic Wobble = vague hedging."],
+        phrases: [
+          "Fix Authenticity Wobble (Controlled Vulnerability): \"Let me be 100% transparent—here is the one piece we're still solving...\"",
+          "Fix Empathy Wobble: \"Before we look at specs, it sounds like the real headache for you has been [X].\""
+        ],
+        avoid: ["NEVER throw more Logic/Credentials at someone experiencing an Empathy Wobble."]
+      }
+    ];
+
+    const ACADEMY_LESSONS = [
+      { id: "l1", track: "6MX", title: "Six-Minute X-Ray: The 6 Social Needs & 6 Decision Styles", body: "Every human is driven by 2 primary Social Needs (Significance, Approval, Acceptance, Intelligence, Pity, Power) and 1 Decision Style (Analytical, Belief, Leader, Social, Necessity, Impulsive). Feed their Social Need to trigger oxytocin homeostasis; structure choices around their Decision Style." },
+      { id: "l2", track: "BOM", title: "Behavior Ops Manual: The 7-Second Rule & >= 11 BTE Threshold", body: "Isolated body language cues mean nothing. A valid deception/stress cluster requires: 1) Deviation from baseline (or multi-channel Hot-Start cluster), 2) Occurring within 0–7 seconds of a stimulus, and 3) Summing to >= 11 BTE points." },
+      { id: "l3", track: "ELP", title: "The Ellipsis Manual: FATE, Authority Pyramid & Linguistic Harvesting", body: "Decelerate physical movement by 20% and use downward vocal inflections to project primal Authority. Harvest 3 exact predicate words the subject uses and echo them back verbatim while climbing a 3-step Compliance Ladder." },
+      { id: "l4", track: "TRC", title: "The Trust Code: Oxytocin vs. Cortisol & Controlled Vulnerability", body: "Audit Authenticity, Empathy, and Logic. Deploy a small 'Controlled Vulnerability' admission early in an interaction to disarm skepticism and trigger mammalian oxytocin." },
+      { id: "l5", track: "NCI 1-4", title: "NCI Levels 1–4: Comfort vs. Discomfort, Elicitation & Cognitive Load", body: "Level 1: Read Ventral Fronting vs. Ventral Denial & Lead-Foot exit pivots. Level 2: Replace direct questions with Elicitation statements & spot Pronoun Drops. Levels 3–4: Impose cognitive load and track multi-channel BTE incongruence (Sh=5, Ci=5, Fd=4)." }
+    ];
+
+    // ========================================================
+    // PERSISTED STATE ENGINE
+    // ========================================================
+    const STORAGE_KEY = "nci_behavioral_ops_web_v1";
+    let state = loadState();
+    let currentTab = "COMMAND";
+    let stealthMode = false;
+    let bteSubTab = "SCORER";
+    let selectedCueCardId = "sig";
+    let srsRevealed = false;
+    let srsIndex = 0;
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+      return {
+        xp: 0,
+        streak: 0,
+        lastActiveDate: new Date().toISOString().slice(0, 10),
+        activeMissionId: "op_t1_01",
+        stealthTallies: [0, 0, 0, 0],
+        completedMissions: [],
+        debriefs: [],
+        habits: [
+          { id: "h1", title: "Downward Vocal Inflection (Authority)", target: 5, today: 0, total: 0 },
+          { id: "h2", title: "Conscious Ventral Fronting + Open Palms", target: 5, today: 0, total: 0 },
+          { id: "h3", title: "Swap Question for Elicitation Statement", target: 3, today: 0, total: 0 },
+          { id: "h4", title: "Harvest & Echo 1 Exact Predicate Word", target: 3, today: 0, total: 0 },
+          { id: "h5", title: "15-Second Baseline Read Before Speaking", target: 4, today: 0, total: 0 }
+        ],
+        bteBaselineLocked: false,
+        bteBaselineSkipped: false,
+        bteBaselineSummary: "Normal Blink (12-18/m) • Ventral Fronting",
+        bteActiveIds: [],
+        flashcards: [
+          { id: "fc1", badge: "BOM", q: "What are the 3 mandatory rules for a valid BTE deception/stress cluster?", a: "1) Deviation from baseline\n2) Within 0–7 seconds after stimulus\n3) Cluster score >= 11 BTE points across multiple channels.", interval: 1 },
+          { id: "fc2", badge: "6MX", q: "How does Acceptance (ACC) differ from Significance (SIG) in Six-Minute X-Ray?", a: "Significance wants to stand OUT as elite/unique; Acceptance wants to fit IN safely with the tribe without being singled out.", interval: 1 },
+          { id: "fc3", badge: "NCI-2", q: "What are 3 Elicitation Statements to extract info without asking direct questions?", a: "1) Assumptive/Provocative Statement\n2) Mild Disbelief / Flattery Trap\n3) Quoting a Third Party ('Most people say...')", interval: 2 },
+          { id: "fc4", badge: "TRC", q: "How do you fix an Authenticity Wobble in The Trust Code?", a: "Deploy 'Controlled Vulnerability'—proactively admit a small, low-stakes human flaw early so everything else you say becomes 3x more believable.", interval: 3 }
+        ]
+      };
+    }
+
+    function saveState() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    }
+
+    function vibrate(pattern) {
+      try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) {}
+    }
+
+    function switchTab(tab, openStealth = false) {
+      vibrate(20);
+      currentTab = tab;
+      stealthMode = openStealth;
+      document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.remove("active"));
+      const activeBtn = document.getElementById("nav-" + tab);
+      if (activeBtn) activeBtn.classList.add("active");
+      render();
+    }
+
+    // ========================================================
+    // RENDER VIEWS
+    // ========================================================
+    function render() {
+      const root = document.getElementById("app");
+      if (currentTab === "COMMAND") root.innerHTML = renderCommand();
+      else if (currentTab === "FIELD_OPS") root.innerHTML = renderFieldOps();
+      else if (currentTab === "BTE_LAB") root.innerHTML = renderBteLab();
+      else if (currentTab === "TOOLKIT") root.innerHTML = renderToolkit();
+      else if (currentTab === "ACADEMY") root.innerHTML = renderAcademy();
+    }
+
+    function renderCommand() {
+      const mission = FIELD_MISSIONS.find(m => m.id === state.activeMissionId) || FIELD_MISSIONS[0];
+      return `
+        <div class="card">
+          <div class="between">
+            <div>
+              <div class="eyebrow">Behavioral Ops Command</div>
+              <div class="title-lg">NCI & Ellipsis Field Trainer</div>
+            </div>
+            <span class="badge" style="background:rgba(0,229,255,0.15);color:var(--cyan);border:1px solid var(--cyan)">
+              ${state.xp} XP • ${state.streak}d Streak
+            </span>
+          </div>
+          <div class="grid-3" style="margin-top:12px">
+            <button class="btn-outline-amber" onclick="switchTab('TOOLKIT')">30s Cue Cards</button>
+            <button class="btn-outline-cyan" onclick="switchTab('BTE_LAB')">Live BTE Scorer</button>
+            <button onclick="switchTab('ACADEMY')">SRS Deck (${state.flashcards.length})</button>
+          </div>
+        </div>
+
+        <div class="card card-surface" style="border-color:var(--cyan)">
+          <div class="between">
+            <span class="eyebrow">${mission.tierName}</span>
+            <span style="color:var(--emerald);font-size:12px;font-weight:800">+${mission.xp} XP</span>
+          </div>
+          <h3 style="font-size:17px;margin:4px 0">${mission.code}: ${mission.title}</h3>
+          <div style="color:var(--amber);font-size:12px;margin-bottom:8px">${mission.source} • ${mission.duration}</div>
+          <p class="muted">${mission.objective}</p>
+          <div class="row" style="margin-top:12px">
+            <button class="btn-cyan" style="flex:2" onclick="switchTab('FIELD_OPS', true)">Launch No-Look Stealth Tally</button>
+            <button style="flex:1" onclick="switchTab('FIELD_OPS', false)">All Missions</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="eyebrow" style="color:var(--emerald)">Automaticity & Micro-Habit Reps</div>
+          <p class="muted" style="margin-bottom:12px">Condition core behavioral reflexes daily so they fire automatically under high-stakes social pressure.</p>
+          ${state.habits.map(h => `
+            <div style="background:var(--bg);border:1px solid ${h.today >= h.target ? 'var(--emerald)' : 'var(--border)'};border-radius:10px;padding:10px 12px;margin-bottom:8px" class="between">
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:700;color:${h.today >= h.target ? 'var(--emerald)' : 'var(--text)'}">${h.title}</div>
+                <div style="font-size:11px;color:var(--amber);margin-top:3px">Today: ${h.today}/${h.target} • Lifetime: ${h.total} reps</div>
+              </div>
+              <button class="${h.today >= h.target ? 'btn-emerald' : 'btn-cyan'}" onclick="incrementHabit('${h.id}')">+1 Rep</button>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function incrementHabit(id) {
+      vibrate(30);
+      const h = state.habits.find(x => x.id === id);
+      if (h) { h.today++; h.total++; state.xp += 15; saveState(); render(); }
+    }
+
+    function renderFieldOps() {
+      const mission = FIELD_MISSIONS.find(m => m.id === state.activeMissionId) || FIELD_MISSIONS[0];
+      if (stealthMode) {
+        const colors = ["var(--cyan)", "var(--amber)", "var(--crimson)", "var(--emerald)"];
+        return `
+          <div class="card between">
+            <div>
+              <div class="eyebrow" style="color:var(--amber)">No-Look Haptic Stealth Tally • ${mission.code}</div>
+              <div class="muted" style="font-size:11px">Tap quadrants by thumb feel in your hand/pocket without looking at the screen.</div>
+            </div>
+            <button onclick="stealthMode=false;render()">Exit</button>
+          </div>
+          <div class="grid-2" style="margin-bottom:14px">
+            ${mission.quadrants.map((q, idx) => `
+              <div class="stealth-quadrant" style="border:2px solid ${colors[idx]}" onclick="tapStealth(${idx})">
+                <span style="font-size:10px;color:var(--muted);font-weight:800">QUADRANT ${idx + 1}</span>
+                <span style="font-size:46px;font-weight:900;color:${colors[idx]}">${state.stealthTallies[idx] || 0}</span>
+                <span style="font-size:14px;font-weight:800">${q}</span>
+              </div>
+            `).join("")}
+          </div>
+          <div class="row">
+            <button style="flex:1" onclick="state.stealthTallies=[0,0,0,0];saveState();render()">Zero Tallies</button>
+            <button class="btn-emerald" style="flex:2" onclick="completeFieldOp()">Complete Op & Claim +${mission.xp} XP</button>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="eyebrow">Progressive Field Operations (Tiers 1–5)</div>
+        <div class="title-lg">Real-World Confidence & Profiling Ladder</div>
+        <p class="muted" style="margin-bottom:12px">Start with Tier 1 Zero-Contact Recon outside of conversation and work up to full conversational Elicitation and Ellipsis mastery.</p>
+
+        ${FIELD_MISSIONS.map(m => {
+          const active = m.id === mission.id;
+          const done = state.completedMissions.includes(m.id);
+          return `
+            <div class="card" style="border-color:${active ? 'var(--cyan)' : 'var(--border)'};cursor:pointer" onclick="state.activeMissionId='${m.id}';saveState();render()">
+              <div class="between">
+                <span class="eyebrow" style="color:${done ? 'var(--emerald)' : 'var(--cyan)'}">${done ? '✓ COMPLETED • ' : ''}${m.tierName}</span>
+                <span style="font-size:12px;color:var(--amber);font-weight:800">${m.duration} • +${m.xp} XP</span>
+              </div>
+              <h3 style="font-size:16px;margin:4px 0">${m.code}: ${m.title}</h3>
+              <p class="muted" style="font-size:12px">${m.objective}</p>
+              ${active ? `
+                <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+                  <div class="eyebrow" style="color:var(--amber);margin-bottom:6px">Pre-Flight Briefing</div>
+                  ${m.briefing.map((b, i) => `<div class="muted" style="font-size:12px;margin-bottom:4px">${i+1}. ${b}</div>`).join("")}
+                  <div class="row" style="margin-top:10px">
+                    <button class="btn-cyan" style="flex:2" onclick="event.stopPropagation();stealthMode=true;render()">Enter No-Look Haptic Stealth Tally</button>
+                    <button class="btn-emerald" style="flex:1" onclick="event.stopPropagation();completeFieldOp()">Complete Op</button>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join("")}
+      `;
+    }
+
+    function tapStealth(idx) {
+      vibrate(idx === 0 ? 25 : [35, 50, 45]);
+      state.stealthTallies[idx] = (state.stealthTallies[idx] || 0) + 1;
+      saveState();
+      render();
+    }
+
+    function completeFieldOp() {
+      const mission = FIELD_MISSIONS.find(m => m.id === state.activeMissionId) || FIELD_MISSIONS[0];
+      vibrate([80, 50, 120]);
+      state.xp += mission.xp;
+      if (!state.completedMissions.includes(mission.id)) state.completedMissions.push(mission.id);
+      state.stealthTallies = [0, 0, 0, 0];
+      stealthMode = false;
+      saveState();
+      render();
+    }
+
+    function renderBteLab() {
+      // Calculate active BTE score
+      const activeEls = BTE_ELEMENTS.filter(e => state.bteActiveIds.includes(e.id));
+      const score = activeEls.filter(e => !e.comfort).reduce((sum, e) => sum + e.pts, 0);
+      const crossed = score >= 11;
+
+      if (!state.bteBaselineLocked) {
+        return `
+          <div class="eyebrow">Behavioral Table of Elements (BTE) Lab</div>
+          <div class="title-lg">Step 1: Baseline Calibration (or Skip)</div>
+          <div class="card" style="border-color:var(--amber)">
+            <div class="between" style="margin-bottom:8px">
+              <span class="eyebrow" style="color:var(--amber)">30-Second Baseline Prompt</span>
+              <span class="badge" style="background:rgba(0,229,255,0.15);color:var(--cyan)">NCI Protocol</span>
+            </div>
+            <p class="muted" style="margin-bottom:12px">
+              Establish a 30-second resting baseline before scoring deviations—OR tap <strong>Skip Baseline (Hot Start)</strong> below when you are dropped straight into an interaction without time to calibrate.
+            </p>
+            <button class="btn-amber" style="width:100%;margin-bottom:12px;padding:12px" onclick="skipBteBaseline()">
+              ⚡ Skip Baseline (Hot Start / Immediate BTE Scoring)
+            </button>
+            <button class="btn-emerald" style="width:100%;padding:12px" onclick="lockCalibratedBaseline()">
+              ✓ Lock 30s Calibrated Baseline & Open BTE Scorer
+            </button>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="eyebrow">Behavioral Table of Elements (BTE) Scorer</div>
+        <div class="card" style="border:2px solid ${crossed ? 'var(--crimson)' : 'var(--cyan)'}">
+          <div class="between">
+            <div>
+              <div style="font-size:11px;font-weight:800;color:${state.bteBaselineSkipped ? 'var(--amber)' : 'var(--emerald)'}">
+                ${state.bteBaselineSkipped ? '⚠️ HOT START MODE (BASELINE SKIPPED)' : '✓ CALIBRATED BASELINE LOCKED'}
+              </div>
+              <div class="muted" style="font-size:11px">
+                ${state.bteBaselineSkipped ? 'Rely on multi-channel clusters within 7s of stimulus.' : state.bteBaselineSummary}
+              </div>
+            </div>
+            <button onclick="resetBte()">Reset / Re-Baseline</button>
+          </div>
+          <div class="between" style="margin-top:12px">
+            <div>
+              <div class="muted" style="font-size:11px;font-weight:700">7-SECOND BTE CLUSTER SCORE</div>
+              <div style="font-size:32px;font-weight:900;color:${crossed ? 'var(--crimson)' : 'var(--cyan)'}">${score} / 11 pts</div>
+            </div>
+            <span class="badge" style="background:${crossed ? 'var(--crimson)' : 'var(--bg)'};color:${crossed ? '#1A0000' : 'var(--muted)'};border:1px solid var(--border);padding:8px 10px">
+              ${crossed ? '🚨 >= 11 THRESHOLD CROSSED' : (11 - score) + ' pts to threshold'}
+            </span>
+          </div>
+        </div>
+
+        <div class="muted" style="font-size:11px;font-weight:800;margin-bottom:8px">TAP CUES OBSERVED WITHIN 7 SECONDS OF STIMULUS:</div>
+        <div class="grid-2">
+          ${BTE_ELEMENTS.map(el => {
+            const selected = state.bteActiveIds.includes(el.id);
+            const color = el.comfort ? 'var(--emerald)' : (el.pts >= 4 ? 'var(--crimson)' : 'var(--amber)');
+            return `
+              <div class="card" style="margin-bottom:0;padding:10px;border:${selected ? '2px' : '1px'} solid ${selected ? color : 'var(--border)'};cursor:pointer" onclick="toggleBteCue('${el.id}')">
+                <div class="row">
+                  <span class="badge" style="border:1px solid ${color};color:${color};font-size:13px">${el.symbol}</span>
+                  <div>
+                    <div style="font-size:12px;font-weight:800">${el.name}</div>
+                    <div style="font-size:10px;color:${color};font-weight:700">${el.comfort ? 'Comfort Cue' : '+' + el.pts + ' BTE pts'} • ${el.zone}</div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    function skipBteBaseline() {
+      vibrate([35, 50, 45]);
+      state.bteBaselineLocked = true;
+      state.bteBaselineSkipped = true;
+      saveState();
+      render();
+    }
+
+    function lockCalibratedBaseline() {
+      vibrate(25);
+      state.bteBaselineLocked = true;
+      state.bteBaselineSkipped = false;
+      saveState();
+      render();
+    }
+
+    function resetBte() {
+      vibrate(20);
+      state.bteBaselineLocked = false;
+      state.bteActiveIds = [];
+      saveState();
+      render();
+    }
+
+    function toggleBteCue(id) {
+      vibrate(30);
+      if (state.bteActiveIds.includes(id)) {
+        state.bteActiveIds = state.bteActiveIds.filter(x => x !== id);
+      } else {
+        state.bteActiveIds.push(id);
+      }
+      saveState();
+      render();
+    }
+
+    function renderToolkit() {
+      const card = POCKET_CUE_CARDS.find(c => c.id === selectedCueCardId) || POCKET_CUE_CARDS[0];
+      return `
+        <div class="eyebrow">30-Second Pre-Meeting Pocket Cue Cards</div>
+        <div class="title-lg">6MX Social Needs, FATE & Trust Code</div>
+        <div class="grid-4" style="margin-bottom:14px">
+          ${POCKET_CUE_CARDS.map(c => `
+            <button class="${c.id === card.id ? 'btn-cyan' : ''}" onclick="selectedCueCardId='${c.id}';render()">
+              ${c.title.split(" ")[0]}
+            </button>
+          `).join("")}
+        </div>
+
+        <div class="card card-surface" style="border-color:var(--cyan)">
+          <div class="between">
+            <span class="eyebrow" style="color:var(--amber)">${card.badge}</span>
+            <span style="font-size:11px;color:var(--cyan);font-weight:800">30-SEC BRIEF</span>
+          </div>
+          <h2 style="font-size:20px;margin:6px 0">${card.title}</h2>
+          <p class="muted" style="margin-bottom:12px">${card.summary}</p>
+
+          <div class="card" style="background:var(--bg)">
+            <div class="eyebrow">👁️ Visual & Verbal Tells</div>
+            ${card.tells.map(t => `<div style="font-size:12px;margin-top:5px">• ${t}</div>`).join("")}
+          </div>
+
+          <div class="card" style="background:var(--bg);border-color:var(--emerald)">
+            <div class="eyebrow" style="color:var(--emerald)">✓ Exact Phrases to Deploy</div>
+            ${card.phrases.map(p => `<div style="font-size:13px;font-weight:700;margin-top:6px">• ${p}</div>`).join("")}
+          </div>
+
+          <div class="card" style="background:var(--bg);border-color:var(--crimson);margin-bottom:0">
+            <div class="eyebrow" style="color:var(--crimson)">✗ Fatal Errors to Avoid</div>
+            ${card.avoid.map(a => `<div style="font-size:12px;margin-top:5px">• ${a}</div>`).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderAcademy() {
+      const card = state.flashcards[srsIndex % state.flashcards.length];
+      return `
+        <div class="eyebrow">NCI Levels 1–4 & Chase Hughes Books</div>
+        <div class="title-lg">SM-2 Spaced Repetition & Codex</div>
+
+        <div class="card card-surface" style="border-color:var(--purple)">
+          <div class="between" style="margin-bottom:8px">
+            <span class="eyebrow" style="color:var(--purple)">SM-2 Flashcard (${(srsIndex % state.flashcards.length) + 1}/${state.flashcards.length}) • ${card.badge}</span>
+            <span class="muted" style="font-size:11px">Interval: ${card.interval}d</span>
+          </div>
+          <div style="font-size:16px;font-weight:800;line-height:1.4;margin-bottom:12px">${card.q}</div>
+          ${!srsRevealed ? `
+            <button class="btn-cyan" style="width:100%" onclick="srsRevealed=true;render()">Reveal Answer</button>
+          ` : `
+            <div style="padding:12px;background:var(--bg);border-radius:10px;border:1px solid var(--emerald);color:var(--emerald);font-size:14px;white-space:pre-line;margin-bottom:12px">${card.a}</div>
+            <div class="grid-4">
+              <button class="btn-crimson" onclick="gradeCard(1)">Again</button>
+              <button class="btn-amber" onclick="gradeCard(2)">Hard</button>
+              <button class="btn-cyan" onclick="gradeCard(4)">Good</button>
+              <button class="btn-emerald" onclick="gradeCard(7)">Easy</button>
+            </div>
+          `}
+        </div>
+
+        <div class="eyebrow" style="margin-top:8px">Core Curriculum Summaries</div>
+        ${ACADEMY_LESSONS.map(l => `
+          <div class="card">
+            <div class="eyebrow" style="color:var(--amber)">${l.track}</div>
+            <h3 style="font-size:15px;margin:4px 0">${l.title}</h3>
+            <p class="muted" style="font-size:12px">${l.body}</p>
+          </div>
+        `).join("")}
+      `;
+    }
+
+    function gradeCard(mult) {
+      vibrate(25);
+      const card = state.flashcards[srsIndex % state.flashcards.length];
+      card.interval = Math.max(1, card.interval * mult);
+      state.xp += 20;
+      srsRevealed = false;
+      srsIndex++;
+      saveState();
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>

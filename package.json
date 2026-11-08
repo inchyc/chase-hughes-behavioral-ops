@@ -1,0 +1,13 @@
+{
+  "name": "chase-hughes-behavioral-ops",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:web": "gradlew :composeApp:jsBrowserDistribution -PwebOnly=true",
+    "dev:web": "gradlew :composeApp:jsBrowserDevelopmentRun -PwebOnly=true"
+  },
+  "dependencies": {
+    "@google/genai": "^2.29.1"
+  }
+}
