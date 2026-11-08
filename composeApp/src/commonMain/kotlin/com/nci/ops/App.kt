@@ -9,11 +9,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.nci.ops.model.CurriculumTrackId
+import com.nci.ops.model.SkillAxis
 import com.nci.ops.storage.OpsRepository
 import com.nci.ops.ui.academy.AcademyScreen
 import com.nci.ops.ui.academy.AcademySubTab
 import com.nci.ops.ui.btelab.BteLabScreen
+import com.nci.ops.ui.btelab.BteSubTab
 import com.nci.ops.ui.cuecards.ToolkitScreen
+import com.nci.ops.ui.cuecards.ToolkitSubTab
 import com.nci.ops.ui.dashboard.DashboardScreen
 import com.nci.ops.ui.fieldops.FieldOpsScreen
 import com.nci.ops.ui.theme.*
@@ -31,7 +35,12 @@ fun App() {
     val appState by OpsRepository.state.collectAsState()
     var currentTab by remember { mutableStateOf(MainNavTab.COMMAND) }
     var openStealthOnFieldOps by remember { mutableStateOf(false) }
+    var fieldOpsInitialCueIndex by remember { mutableStateOf<Int?>(null) }
     var academyInitialSubTab by remember { mutableStateOf(AcademySubTab.CURRICULUM) }
+    var academyInitialTrackId by remember { mutableStateOf<CurriculumTrackId?>(null) }
+    var toolkitInitialSubTab by remember { mutableStateOf(ToolkitSubTab.POCKET_CUE_CARDS) }
+    var toolkitInitialCardId by remember { mutableStateOf<String?>(null) }
+    var bteLabInitialSubTab by remember { mutableStateOf(BteSubTab.LIVE_SCORER) }
 
     NciTacticalTheme {
         Scaffold(
@@ -54,6 +63,7 @@ fun App() {
                             TextButton(
                                 onClick = {
                                     openStealthOnFieldOps = false
+                                    fieldOpsInitialCueIndex = null
                                     currentTab = tab
                                 },
                                 modifier = Modifier.weight(1f),
@@ -89,10 +99,80 @@ fun App() {
                         appState = appState,
                         onNavigateToFieldOps = { stealth ->
                             openStealthOnFieldOps = stealth
+                            fieldOpsInitialCueIndex = null
                             currentTab = MainNavTab.FIELD_OPS
                         },
-                        onNavigateToBteScorer = { currentTab = MainNavTab.BTE_LAB },
-                        onNavigateToCueCards = { currentTab = MainNavTab.TOOLKIT },
+                        onNavigateToFieldOpCue = { cueIndex ->
+                            openStealthOnFieldOps = false
+                            fieldOpsInitialCueIndex = cueIndex
+                            currentTab = MainNavTab.FIELD_OPS
+                        },
+                        onNavigateToSkillAxis = { axis ->
+                            when (axis) {
+                                SkillAxis.BASELINE_RECON -> {
+                                    bteLabInitialSubTab = BteSubTab.PERIODIC_TABLE
+                                    currentTab = MainNavTab.BTE_LAB
+                                }
+                                SkillAxis.NONVERBAL_AUTHORITY -> {
+                                    academyInitialSubTab = AcademySubTab.CURRICULUM
+                                    academyInitialTrackId = CurriculumTrackId.NCI_LEVEL_1
+                                    currentTab = MainNavTab.ACADEMY
+                                }
+                                SkillAxis.TRUST_RAPPORT -> {
+                                    toolkitInitialSubTab = ToolkitSubTab.POCKET_CUE_CARDS
+                                    toolkitInitialCardId = "cue_trust_wobbles"
+                                    currentTab = MainNavTab.TOOLKIT
+                                }
+                                SkillAxis.SIX_MX_PROFILING -> {
+                                    toolkitInitialSubTab = ToolkitSubTab.SIX_MX_DOSSIERS
+                                    currentTab = MainNavTab.TOOLKIT
+                                }
+                                SkillAxis.BTE_DETECTION -> {
+                                    bteLabInitialSubTab = BteSubTab.LIVE_SCORER
+                                    currentTab = MainNavTab.BTE_LAB
+                                }
+                                SkillAxis.ELLIPSIS_ELICITATION -> {
+                                    toolkitInitialSubTab = ToolkitSubTab.POCKET_CUE_CARDS
+                                    toolkitInitialCardId = "cue_fate_model"
+                                    currentTab = MainNavTab.TOOLKIT
+                                }
+                            }
+                        },
+                        onNavigateToMicroHabitReview = { habitId ->
+                            when (habitId) {
+                                "habit_1_eye_contact" -> {
+                                    toolkitInitialSubTab = ToolkitSubTab.POCKET_CUE_CARDS
+                                    toolkitInitialCardId = "cue_sn_significance"
+                                    currentTab = MainNavTab.TOOLKIT
+                                }
+                                "habit_2_controlled_vulnerability" -> {
+                                    toolkitInitialSubTab = ToolkitSubTab.POCKET_CUE_CARDS
+                                    toolkitInitialCardId = "cue_trust_wobbles"
+                                    currentTab = MainNavTab.TOOLKIT
+                                }
+                                "habit_3_linguistic_elicitation" -> {
+                                    academyInitialSubTab = AcademySubTab.CURRICULUM
+                                    academyInitialTrackId = CurriculumTrackId.ELLIPSIS_MANUAL
+                                    currentTab = MainNavTab.ACADEMY
+                                }
+                                "habit_4_bte_cluster_awareness" -> {
+                                    bteLabInitialSubTab = BteSubTab.PERIODIC_TABLE
+                                    currentTab = MainNavTab.BTE_LAB
+                                }
+                                else -> {
+                                    toolkitInitialSubTab = ToolkitSubTab.POCKET_CUE_CARDS
+                                    currentTab = MainNavTab.TOOLKIT
+                                }
+                            }
+                        },
+                        onNavigateToBteScorer = {
+                            bteLabInitialSubTab = BteSubTab.LIVE_SCORER
+                            currentTab = MainNavTab.BTE_LAB
+                        },
+                        onNavigateToCueCards = {
+                            toolkitInitialSubTab = ToolkitSubTab.POCKET_CUE_CARDS
+                            currentTab = MainNavTab.TOOLKIT
+                        },
                         onNavigateToSrs = {
                             academyInitialSubTab = AcademySubTab.SRS_FLASHCARDS
                             currentTab = MainNavTab.ACADEMY
@@ -100,13 +180,31 @@ fun App() {
                     )
                     MainNavTab.FIELD_OPS -> FieldOpsScreen(
                         appState = appState,
-                        initialStealthMode = openStealthOnFieldOps
+                        initialStealthMode = openStealthOnFieldOps,
+                        initialCueIndex = fieldOpsInitialCueIndex,
+                        onNavigateToAcademyTrack = { trackId ->
+                            academyInitialSubTab = AcademySubTab.CURRICULUM
+                            academyInitialTrackId = trackId
+                            currentTab = MainNavTab.ACADEMY
+                        }
                     )
-                    MainNavTab.BTE_LAB -> BteLabScreen()
-                    MainNavTab.TOOLKIT -> ToolkitScreen(appState = appState)
+                    MainNavTab.BTE_LAB -> BteLabScreen(
+                        initialSubTab = bteLabInitialSubTab
+                    )
+                    MainNavTab.TOOLKIT -> ToolkitScreen(
+                        appState = appState,
+                        initialSubTab = toolkitInitialSubTab,
+                        initialCardId = toolkitInitialCardId
+                    )
                     MainNavTab.ACADEMY -> AcademyScreen(
                         appState = appState,
-                        initialSubTab = academyInitialSubTab
+                        initialSubTab = academyInitialSubTab,
+                        initialTrackId = academyInitialTrackId,
+                        onNavigateToFieldOps = {
+                            openStealthOnFieldOps = false
+                            fieldOpsInitialCueIndex = null
+                            currentTab = MainNavTab.FIELD_OPS
+                        }
                     )
                 }
             }

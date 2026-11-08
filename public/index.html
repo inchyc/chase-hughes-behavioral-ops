@@ -457,19 +457,28 @@
             <button class="btn-outline-cyan" onclick="switchTab('BTE_LAB')">Live BTE Scorer</button>
             <button onclick="switchTab('ACADEMY')">SRS Deck (${state.flashcards.length})</button>
           </div>
+          <div style="margin-top:10px;text-align:right">
+            <a href="/NCI-Behavioral-Ops.apk" download style="color:var(--cyan);font-size:11px;font-weight:700;text-decoration:none">
+              ⬇ Download Android APK (Offline Native App)
+            </a>
+          </div>
         </div>
 
-        <div class="card card-surface" style="border-color:var(--cyan)">
+        <div class="card card-surface" style="border-color:var(--cyan);cursor:pointer" onclick="switchTab('FIELD_OPS', false)">
           <div class="between">
-            <span class="eyebrow">${mission.tierName}</span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span class="eyebrow">${mission.tierName}</span>
+              <span class="badge" style="background:rgba(0,229,255,0.15);color:var(--cyan);font-size:9px;border:1px solid var(--cyan)">TAP TO REVIEW BRIEFING ↗</span>
+            </div>
             <span style="color:var(--emerald);font-size:12px;font-weight:800">+${mission.xp} XP</span>
           </div>
           <h3 style="font-size:17px;margin:4px 0">${mission.code}: ${mission.title}</h3>
           <div style="color:var(--amber);font-size:12px;margin-bottom:8px">${mission.source} • ${mission.duration}</div>
           <p class="muted">${mission.objective}</p>
-          <div class="row" style="margin-top:12px">
-            <button class="btn-cyan" style="flex:2" onclick="switchTab('FIELD_OPS', true)">Launch No-Look Stealth Tally</button>
-            <button style="flex:1" onclick="switchTab('FIELD_OPS', false)">All Missions</button>
+          <div class="row" style="margin-top:12px" onclick="event.stopPropagation()">
+            <button class="btn-cyan" style="flex:1.4" onclick="switchTab('FIELD_OPS', true)">Launch Stealth Tally</button>
+            <button class="btn-outline-cyan" style="flex:1.2" onclick="switchTab('FIELD_OPS', false)">Review Briefing</button>
+            <button style="flex:0.8" onclick="switchTab('FIELD_OPS', false)">Switch Op</button>
           </div>
         </div>
 

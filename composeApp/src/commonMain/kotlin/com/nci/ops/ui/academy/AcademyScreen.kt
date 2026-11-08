@@ -30,7 +30,9 @@ enum class AcademySubTab(val label: String) {
 @Composable
 fun AcademyScreen(
     appState: PersistedAppState,
-    initialSubTab: AcademySubTab = AcademySubTab.CURRICULUM
+    initialSubTab: AcademySubTab = AcademySubTab.CURRICULUM,
+    initialTrackId: CurriculumTrackId? = null,
+    onNavigateToFieldOps: () -> Unit = {}
 ) {
     var activeTab by remember(initialSubTab) { mutableStateOf(initialSubTab) }
     val now = PlatformServices.currentEpochMs()
@@ -85,7 +87,11 @@ fun AcademyScreen(
         }
 
         when (activeTab) {
-            AcademySubTab.CURRICULUM -> CurriculumTracksView(appState = appState)
+            AcademySubTab.CURRICULUM -> CurriculumTracksView(
+                appState = appState,
+                initialTrackId = initialTrackId,
+                onNavigateToFieldOps = onNavigateToFieldOps
+            )
             AcademySubTab.SRS_FLASHCARDS -> SrsFlashcardTrainerView(appState = appState)
             AcademySubTab.NOTE_VAULT -> CustomNoteVaultView()
         }
@@ -93,8 +99,14 @@ fun AcademyScreen(
 }
 
 @Composable
-private fun CurriculumTracksView(appState: PersistedAppState) {
-    var selectedTrack by remember { mutableStateOf(CurriculumTrackId.SIX_MINUTE_XRAY) }
+private fun CurriculumTracksView(
+    appState: PersistedAppState,
+    initialTrackId: CurriculumTrackId? = null,
+    onNavigateToFieldOps: () -> Unit = {}
+) {
+    var selectedTrack by remember(initialTrackId) {
+        mutableStateOf(initialTrackId ?: CurriculumTrackId.SIX_MINUTE_XRAY)
+    }
 
     // 8 Track Selector Grid (2 per row)
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -225,12 +237,45 @@ private fun CurriculumTracksView(appState: PersistedAppState) {
                     }
                 }
 
-                Text(
-                    text = "Immediate Micro-Drill: ${lesson.fieldDrillPrompt}",
-                    color = EmeraldComfort,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Surface(
+                    color = TacticalObsidian,
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, EmeraldComfort.copy(alpha = 0.4f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                            Text(
+                                text = "IMMEDIATE MICRO-DRILL:",
+                                color = EmeraldComfort,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = lesson.fieldDrillPrompt,
+                                color = TextPrimary,
+                                fontSize = 12.sp,
+                                lineHeight = 16.sp
+                            )
+                        }
+                        OutlinedButton(
+                            onClick = onNavigateToFieldOps,
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, EmeraldComfort),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Text("Field Ops ↗", color = EmeraldComfort, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
 
                 if (!isCompleted) {
                     Button(

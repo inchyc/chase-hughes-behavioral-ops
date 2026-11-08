@@ -32,9 +32,11 @@ enum class BteSubTab(val label: String) {
 }
 
 @Composable
-fun BteLabScreen() {
+fun BteLabScreen(
+    initialSubTab: BteSubTab = BteSubTab.LIVE_SCORER
+) {
     val bteSession by OpsRepository.bteSession.collectAsState()
-    var activeSubTab by remember { mutableStateOf(BteSubTab.LIVE_SCORER) }
+    var activeSubTab by remember(initialSubTab) { mutableStateOf(initialSubTab) }
     var selectedElement by remember { mutableStateOf<BteElement?>(BteCatalog.elements.first()) }
     var selectedCategoryFilter by remember { mutableStateOf<BteCategory?>(null) }
 

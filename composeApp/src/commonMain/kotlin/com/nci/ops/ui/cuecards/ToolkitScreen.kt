@@ -28,8 +28,13 @@ enum class ToolkitSubTab(val label: String) {
 }
 
 @Composable
-fun ToolkitScreen(appState: PersistedAppState) {
-    var activeTab by remember { mutableStateOf(ToolkitSubTab.POCKET_CUE_CARDS) }
+fun ToolkitScreen(
+    appState: PersistedAppState,
+    initialSubTab: ToolkitSubTab = ToolkitSubTab.POCKET_CUE_CARDS,
+    initialCardId: String? = null
+) {
+    var activeTab by remember(initialSubTab) { mutableStateOf(initialSubTab) }
+    var targetCardId by remember(initialCardId) { mutableStateOf(initialCardId) }
 
     Column(
         modifier = Modifier
@@ -73,15 +78,31 @@ fun ToolkitScreen(appState: PersistedAppState) {
         }
 
         when (activeTab) {
-            ToolkitSubTab.POCKET_CUE_CARDS -> PocketCueCardsView()
-            ToolkitSubTab.SIX_MX_DOSSIERS -> SixMxDossiersView(appState = appState)
+            ToolkitSubTab.POCKET_CUE_CARDS -> PocketCueCardsView(
+                targetCardId = targetCardId,
+                onCardSelected = { targetCardId = it.id }
+            )
+            ToolkitSubTab.SIX_MX_DOSSIERS -> SixMxDossiersView(
+                appState = appState,
+                onOpenCard = { cardId ->
+                    targetCardId = cardId
+                    activeTab = ToolkitSubTab.POCKET_CUE_CARDS
+                }
+            )
         }
     }
 }
 
 @Composable
-private fun PocketCueCardsView() {
-    var selectedCard by remember { mutableStateOf(PocketCueCardsCatalog.cards.first()) }
+private fun PocketCueCardsView(
+    targetCardId: String? = null,
+    onCardSelected: (PocketCueCard) -> Unit = {}
+) {
+    val initialCard = remember(targetCardId) {
+        PocketCueCardsCatalog.cards.find { it.id == targetCardId }
+            ?: PocketCueCardsCatalog.cards.first()
+    }
+    var selectedCard by remember(targetCardId) { mutableStateOf(initialCard) }
 
     Text(
         text = "TAP ANY CARD FOR A 30-SECOND PRE-INTERACTION BRIEFING:",
@@ -108,7 +129,10 @@ private fun PocketCueCardsView() {
                         ),
                         modifier = Modifier
                             .weight(1f)
-                            .clickable { selectedCard = card }
+                            .clickable {
+                                selectedCard = card
+                                onCardSelected(card)
+                            }
                     ) {
                         Column(modifier = Modifier.padding(10.dp)) {
                             Text(
@@ -276,7 +300,10 @@ private fun PocketCueCardDetailView(card: PocketCueCard) {
 }
 
 @Composable
-private fun SixMxDossiersView(appState: PersistedAppState) {
+private fun SixMxDossiersView(
+    appState: PersistedAppState,
+    onOpenCard: (String) -> Unit = {}
+) {
     var aliasInput by remember { mutableStateOf("") }
     var roleInput by remember { mutableStateOf("") }
     var primaryNeed by remember { mutableStateOf(SocialNeedType.SIGNIFICANCE) }
@@ -426,6 +453,28 @@ private fun SixMxDossiersView(appState: PersistedAppState) {
                         lineHeight = 18.sp,
                         modifier = Modifier.padding(top = 4.dp)
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = { onOpenCard("cue_sn_${primaryNeed.name.lowercase()}") },
+                            shape = RoundedCornerShape(6.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = CyanPrimary, contentColor = TacticalObsidian),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Text("Open ${primaryNeed.shortCode} Cue Card ↗", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                        OutlinedButton(
+                            onClick = { onOpenCard("cue_ds_matrix") },
+                            shape = RoundedCornerShape(6.dp),
+                            border = BorderStroke(1.dp, EmeraldComfort),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Text("Decision Matrix Card ↗", color = EmeraldComfort, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
             }
 
@@ -514,10 +563,13 @@ private fun SixMxDossiersView(appState: PersistedAppState) {
                     Surface(
                         color = CyanPrimary.copy(alpha = 0.16f),
                         shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, CyanPrimary)
+                        border = BorderStroke(1.dp, CyanPrimary),
+                        modifier = Modifier.clickable {
+                            onOpenCard("cue_sn_${dos.primarySocialNeed.name.lowercase()}")
+                        }
                     ) {
                         Text(
-                            text = "${dos.primarySocialNeed.shortCode}/${dos.secondarySocialNeed.shortCode} • ${dos.decisionStyle.title}",
+                            text = "${dos.primarySocialNeed.shortCode}/${dos.secondarySocialNeed.shortCode} • ${dos.decisionStyle.title} ↗",
                             color = CyanPrimary,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,

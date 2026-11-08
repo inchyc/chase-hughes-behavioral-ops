@@ -118,6 +118,18 @@ enum class FieldOpTier(
 }
 
 @Serializable
+data class TargetBehaviorGuide(
+    val quadrantIndex: Int,              // 0..3 matching the Stealth Tally Quadrant
+    val cueName: String,                 // e.g., "Ventral Denial / Barrier"
+    val quickHint: String,               // Brief 1-line field reference hint
+    val physicalTells: List<String>,     // Anatomical tells: torso, hands, feet, eyes, voice
+    val realWorldExample: String,        // Real-world operational scene description
+    val psychologicalWhy: String,        // Limbic mechanism / Chase Hughes behavioral rationale
+    val falsePositivesToAvoid: String,   // What NOT to confuse this with
+    val relatedBteSymbol: String? = null // Cross-reference badge (e.g., "Vd", "Lp", "Fc", "Ef")
+)
+
+@Serializable
 data class FieldMission(
     val id: String,
     val tier: FieldOpTier,
@@ -131,7 +143,8 @@ data class FieldMission(
     val successCriteria: String,
     val debriefPrompt: String,
     val xpReward: Int,
-    val skillAxisAffected: SkillAxis
+    val skillAxisAffected: SkillAxis,
+    val targetBehaviors: List<TargetBehaviorGuide> = emptyList()
 )
 
 enum class SkillAxis(val displayName: String) {
